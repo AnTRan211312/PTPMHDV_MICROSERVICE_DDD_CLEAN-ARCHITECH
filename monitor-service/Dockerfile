@@ -17,19 +17,19 @@ COPY payment-service/pom.xml ./payment-service/pom.xml
 COPY monitor-service/pom.xml ./monitor-service/pom.xml
 
 # Download dependencies
-RUN mvn dependency:go-offline -B -pl eureka-server -am
+RUN mvn dependency:go-offline -B -pl monitor-service -am
 
 # Copy source code
-COPY eureka-server/src ./eureka-server/src
+COPY monitor-service/src ./monitor-service/src
 
 # Build
-RUN mvn clean package -DskipTests -pl eureka-server -am
+RUN mvn clean package -DskipTests -pl monitor-service -am
 
 # Stage 2: Runtime stage
 FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
-COPY --from=builder /app/eureka-server/target/*.jar app.jar
+COPY --from=builder /app/monitor-service/target/*.jar app.jar
 
 RUN addgroup -g 1001 -S javaapp && \
     adduser -S javauser -u 1001 && \
@@ -37,9 +37,9 @@ RUN addgroup -g 1001 -S javaapp && \
 
 USER javauser
 
-EXPOSE 8761 6000
+EXPOSE 8088 5088
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-    CMD wget --quiet --tries=1 --spider http://localhost:6000/actuator/health || exit 1
+    CMD wget --quiet --tries=1 --spider http://localhost:5088/actuator/health || exit 1
 
 CMD ["java", "-jar", "app.jar"]

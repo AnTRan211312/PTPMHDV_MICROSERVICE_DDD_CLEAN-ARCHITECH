@@ -1,39 +1,45 @@
-# Stage 1: Build stage - Sử dụng image Maven nhỏ để build
+# Stage 1: Build stage
 FROM maven:3.9.9-eclipse-temurin-21-alpine AS builder
 
-# Thiết lập working directory
 WORKDIR /app
 
-# Copy chỉ file dependencies trước để cache layer
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
+# Copy parent POM và tất cả module POMs
+COPY pom.xml ./pom.xml
+COPY api-gateway/pom.xml ./api-gateway/pom.xml
+COPY eureka-server/pom.xml ./eureka-server/pom.xml
+COPY auth-service/pom.xml ./auth-service/pom.xml
+COPY product-service/pom.xml ./product-service/pom.xml
+COPY order-service/pom.xml ./order-service/pom.xml
+COPY inventory-service/pom.xml ./inventory-service/pom.xml
+COPY cart-service/pom.xml ./cart-service/pom.xml
+COPY notification-service/pom.xml ./notification-service/pom.xml
+COPY payment-service/pom.xml ./payment-service/pom.xml
+COPY monitor-service/pom.xml ./monitor-service/pom.xml
 
-# Copy source code và build
-COPY src ./src
-RUN mvn clean package -DskipTests
+# Download dependencies
+RUN mvn dependency:go-offline -B -pl payment-service -am
 
-# Stage 2: Runtime stage - Image nhỏ nhất với JRE
+# Copy source code
+COPY payment-service/src ./payment-service/src
+
+# Build
+RUN mvn clean package -DskipTests -pl payment-service -am
+
+# Stage 2: Runtime stage
 FROM eclipse-temurin:21-jre-alpine
 
-# Thiết lập working directory
 WORKDIR /app
+COPY --from=builder /app/payment-service/target/*.jar app.jar
 
-# Copy chỉ JAR từ builder stage
-COPY --from=builder /app/target/*.jar app.jar
-
-# Chạy với user non-root để tăng security
 RUN addgroup -g 1001 -S javaapp && \
     adduser -S javauser -u 1001 && \
     chown -R javauser:javaapp /app
 
 USER javauser
 
-# Expose ports: app port và management port
 EXPOSE 8087 5087
 
-# Health check: Check endpoint /actuator/health trên management port, mỗi 30s, timeout 5s, retries 3
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD wget --quiet --tries=1 --spider http://localhost:5087/actuator/health || exit 1
 
-# Command để chạy app với profile production
 CMD ["java", "-jar", "app.jar"]
