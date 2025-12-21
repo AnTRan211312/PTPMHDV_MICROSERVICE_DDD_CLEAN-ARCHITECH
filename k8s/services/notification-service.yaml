@@ -53,11 +53,13 @@ spec:
                 configMapKeyRef:
                   name: fein-kafka-config
                   key: ZIPKIN_URI
-            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+            - name: JWT_SECRET
               valueFrom:
-                configMapKeyRef:
-                  name: fein-kafka-config
-                  key: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                secretKeyRef:
+                  name: fein-kafka-secrets
+                  key: JWT_SECRET
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness

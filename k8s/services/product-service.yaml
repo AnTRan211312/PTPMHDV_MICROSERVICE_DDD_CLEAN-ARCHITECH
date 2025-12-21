@@ -68,6 +68,31 @@ spec:
                 secretKeyRef:
                   name: fein-kafka-secrets
                   key: SPRING_DATA_REDIS_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: fein-kafka-secrets
+                  key: JWT_SECRET
+            - name: AWS_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: fein-kafka-secrets
+                  key: AWS_ACCESS_KEY
+            - name: AWS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: fein-kafka-secrets
+                  key: AWS_SECRET_KEY
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: AWS_REGION
+            - name: AWS_BUCKET_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: AWS_BUCKET_NAME
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness

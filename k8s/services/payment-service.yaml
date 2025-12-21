@@ -53,11 +53,20 @@ spec:
                 configMapKeyRef:
                   name: fein-kafka-config
                   key: ZIPKIN_URI
-            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+            - name: JWT_SECRET
               valueFrom:
-                configMapKeyRef:
-                  name: fein-kafka-config
-                  key: SPRING_KAFKA_BOOTSTRAP_SERVERS
+                secretKeyRef:
+                  name: fein-kafka-secrets
+                  key: JWT_SECRET
+            # VNPay - để trống cho development
+            - name: VNPAY_TMN_CODE
+              value: ""
+            - name: VNPAY_HASH_SECRET
+              value: ""
+            - name: VNPAY_RETURN_URL
+              value: ""
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
