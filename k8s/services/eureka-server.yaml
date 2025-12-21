@@ -1,0 +1,70 @@
+# Eureka Server - Service Discovery
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eureka-server
+  namespace: fein-kafka
+  labels:
+    app: eureka-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eureka-server
+  template:
+    metadata:
+      labels:
+        app: eureka-server
+    spec:
+      containers:
+        - name: eureka-server
+          image: 01648042920/eureka-server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8761
+              name: http
+            - containerPort: 6000
+              name: management
+          env:
+            - name: SERVER_PORT
+              value: "8761"
+            - name: MANAGEMENT_PORT
+              value: "6000"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 6000
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 6000
+            initialDelaySeconds: 60
+            periodSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eureka-server
+  namespace: fein-kafka
+spec:
+  type: ClusterIP
+  selector:
+    app: eureka-server
+  ports:
+    - name: http
+      port: 8761
+      targetPort: 8761
+    - name: management
+      port: 6000
+      targetPort: 6000

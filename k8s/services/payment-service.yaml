@@ -1,0 +1,96 @@
+# Payment Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: fein-kafka
+  labels:
+    app: payment-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+    spec:
+      containers:
+        - name: payment-service
+          image: 01648042920/payment-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8087
+            - containerPort: 5087
+          env:
+            - name: SERVER_PORT
+              value: "8087"
+            - name: MANAGEMENT_PORT
+              value: "5087"
+            - name: DB_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: PAYMENT_DB_URL
+            - name: DB_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: DB_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: fein-kafka-secrets
+                  key: DB_PASSWORD
+            - name: EUREKA_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: EUREKA_URI
+            - name: ZIPKIN_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: ZIPKIN_URI
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: SPRING_KAFKA_BOOTSTRAP_SERVERS
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 5087
+            initialDelaySeconds: 90
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 5087
+            initialDelaySeconds: 60
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+  namespace: fein-kafka
+spec:
+  type: ClusterIP
+  selector:
+    app: payment-service
+  ports:
+    - name: http
+      port: 8087
+      targetPort: 8087
+    - name: management
+      port: 5087
+      targetPort: 5087

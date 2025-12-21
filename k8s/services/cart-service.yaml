@@ -1,0 +1,111 @@
+# Cart Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart-service
+  namespace: fein-kafka
+  labels:
+    app: cart-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cart-service
+  template:
+    metadata:
+      labels:
+        app: cart-service
+    spec:
+      containers:
+        - name: cart-service
+          image: 01648042920/cart-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8084
+            - containerPort: 5084
+          env:
+            - name: SERVER_PORT
+              value: "8084"
+            - name: MANAGEMENT_PORT
+              value: "5084"
+            - name: DB_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: CART_DB_URL
+            - name: DB_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: DB_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: fein-kafka-secrets
+                  key: DB_PASSWORD
+            - name: EUREKA_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: EUREKA_URI
+            - name: ZIPKIN_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: ZIPKIN_URI
+            - name: SPRING_DATA_REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: SPRING_DATA_REDIS_HOST
+            - name: SPRING_DATA_REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: SPRING_DATA_REDIS_PORT
+            - name: SPRING_DATA_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: fein-kafka-secrets
+                  key: SPRING_DATA_REDIS_PASSWORD
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: SPRING_KAFKA_BOOTSTRAP_SERVERS
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 5084
+            initialDelaySeconds: 90
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 5084
+            initialDelaySeconds: 60
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart-service
+  namespace: fein-kafka
+spec:
+  type: ClusterIP
+  selector:
+    app: cart-service
+  ports:
+    - name: http
+      port: 8084
+      targetPort: 8084
+    - name: management
+      port: 5084
+      targetPort: 5084

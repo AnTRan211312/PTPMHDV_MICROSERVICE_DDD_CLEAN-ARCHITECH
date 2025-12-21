@@ -1,0 +1,85 @@
+# API Gateway - Entry point cho tất cả requests
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: fein-kafka
+  labels:
+    app: api-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: 01648042920/api-gateway:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+            - containerPort: 5080
+              name: management
+          env:
+            - name: SERVER_PORT
+              value: "8080"
+            - name: MANAGEMENT_PORT
+              value: "5080"
+            - name: EUREKA_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: EUREKA_URI
+            - name: ZIPKIN_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: ZIPKIN_URI
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: fein-kafka-secrets
+                  key: JWT_SECRET
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 5080
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 5080
+            initialDelaySeconds: 60
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: fein-kafka
+spec:
+  type: NodePort
+  selector:
+    app: api-gateway
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      nodePort: 30080
+    - name: management
+      port: 5080
+      targetPort: 5080

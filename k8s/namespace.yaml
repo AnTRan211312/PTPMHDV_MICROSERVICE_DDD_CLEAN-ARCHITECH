@@ -1,0 +1,8 @@
+# Namespace cho toàn bộ microservices
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fein-kafka
+  labels:
+    app: fein-kafka
+    environment: development

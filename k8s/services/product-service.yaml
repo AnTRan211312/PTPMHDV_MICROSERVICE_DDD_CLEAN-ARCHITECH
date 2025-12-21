@@ -1,0 +1,106 @@
+# Product Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service
+  namespace: fein-kafka
+  labels:
+    app: product-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product-service
+  template:
+    metadata:
+      labels:
+        app: product-service
+    spec:
+      containers:
+        - name: product-service
+          image: 01648042920/product-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8082
+            - containerPort: 5082
+          env:
+            - name: SERVER_PORT
+              value: "8082"
+            - name: MANAGEMENT_PORT
+              value: "5082"
+            - name: DB_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: PRODUCT_DB_URL
+            - name: DB_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: DB_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: fein-kafka-secrets
+                  key: DB_PASSWORD
+            - name: EUREKA_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: EUREKA_URI
+            - name: ZIPKIN_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: ZIPKIN_URI
+            - name: SPRING_DATA_REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: SPRING_DATA_REDIS_HOST
+            - name: SPRING_DATA_REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: SPRING_DATA_REDIS_PORT
+            - name: SPRING_DATA_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: fein-kafka-secrets
+                  key: SPRING_DATA_REDIS_PASSWORD
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 5082
+            initialDelaySeconds: 90
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 5082
+            initialDelaySeconds: 60
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-service
+  namespace: fein-kafka
+spec:
+  type: ClusterIP
+  selector:
+    app: product-service
+  ports:
+    - name: http
+      port: 8082
+      targetPort: 8082
+    - name: management
+      port: 5082
+      targetPort: 5082

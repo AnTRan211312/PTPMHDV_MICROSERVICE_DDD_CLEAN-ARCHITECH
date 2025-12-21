@@ -1,0 +1,76 @@
+# Monitor Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monitor-service
+  namespace: fein-kafka
+  labels:
+    app: monitor-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: monitor-service
+  template:
+    metadata:
+      labels:
+        app: monitor-service
+    spec:
+      containers:
+        - name: monitor-service
+          image: 01648042920/monitor-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8088
+            - containerPort: 5088
+          env:
+            - name: SERVER_PORT
+              value: "8088"
+            - name: MANAGEMENT_PORT
+              value: "5088"
+            - name: EUREKA_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: EUREKA_URI
+            - name: ZIPKIN_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: ZIPKIN_URI
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 5088
+            initialDelaySeconds: 90
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 5088
+            initialDelaySeconds: 60
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: monitor-service
+  namespace: fein-kafka
+spec:
+  type: ClusterIP
+  selector:
+    app: monitor-service
+  ports:
+    - name: http
+      port: 8088
+      targetPort: 8088
+    - name: management
+      port: 5088
+      targetPort: 5088

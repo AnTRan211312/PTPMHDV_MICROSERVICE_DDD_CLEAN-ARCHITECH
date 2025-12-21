@@ -1,0 +1,96 @@
+# Inventory Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-service
+  namespace: fein-kafka
+  labels:
+    app: inventory-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventory-service
+  template:
+    metadata:
+      labels:
+        app: inventory-service
+    spec:
+      containers:
+        - name: inventory-service
+          image: 01648042920/inventory-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8083
+            - containerPort: 5083
+          env:
+            - name: SERVER_PORT
+              value: "8083"
+            - name: MANAGEMENT_PORT
+              value: "5083"
+            - name: DB_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: INVENTORY_DB_URL
+            - name: DB_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: MYSQL_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: fein-kafka-secrets
+                  key: MYSQL_PASSWORD
+            - name: EUREKA_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: EUREKA_URI
+            - name: ZIPKIN_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: ZIPKIN_URI
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: fein-kafka-config
+                  key: SPRING_KAFKA_BOOTSTRAP_SERVERS
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 5083
+            initialDelaySeconds: 90
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 5083
+            initialDelaySeconds: 60
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-service
+  namespace: fein-kafka
+spec:
+  type: ClusterIP
+  selector:
+    app: inventory-service
+  ports:
+    - name: http
+      port: 8083
+      targetPort: 8083
+    - name: management
+      port: 5083
+      targetPort: 5083
