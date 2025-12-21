@@ -69,7 +69,7 @@ spec:
                   name: fein-kafka-secrets
                   key: SPRING_DATA_REDIS_PASSWORD
             - name: KAFKA_BOOTSTRAP_SERVERS
-              value: "kafka:9092"
+              value: "kafka.fein-kafka.svc.cluster.local:9092"
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:

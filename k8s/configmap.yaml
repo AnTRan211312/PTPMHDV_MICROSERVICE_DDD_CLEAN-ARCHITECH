@@ -12,7 +12,7 @@ data:
   ZIPKIN_URI: "http://zipkin:9411/api/v2/spans"
   
   # Kafka - sử dụng service name trong K8s
-  SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka.fein-kafka.svc.cluster.local:9092"
   
   # Redis
   SPRING_DATA_REDIS_HOST: "redis"
