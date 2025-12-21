@@ -1,0 +1,79 @@
+global:
+  scrape_interval: 10s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'api-gateway'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:5080']
+    relabel_configs:
+      - target_label: application
+        replacement: api-gateway
+
+  - job_name: 'auth-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:5081']
+    relabel_configs:
+      - target_label: application
+        replacement: auth-service
+
+  - job_name: 'product-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:5082']
+    relabel_configs:
+      - target_label: application
+        replacement: product-service
+
+  - job_name: 'cart-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:5083']
+    relabel_configs:
+      - target_label: application
+        replacement: cart-service
+
+  - job_name: 'inventory-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:5084']
+    relabel_configs:
+      - target_label: application
+        replacement: inventory-service
+
+  - job_name: 'order-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:5085']
+    relabel_configs:
+      - target_label: application
+        replacement: order-service
+
+  - job_name: 'notification-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:5086']
+    relabel_configs:
+      - target_label: application
+        replacement: notification-service
+
+  - job_name: 'payment-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:5087']
+    relabel_configs:
+      - target_label: application
+        replacement: payment-service
+
+  - job_name: 'monitor-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:5088']
+    relabel_configs:
+      - target_label: application
+        replacement: monitor-service
