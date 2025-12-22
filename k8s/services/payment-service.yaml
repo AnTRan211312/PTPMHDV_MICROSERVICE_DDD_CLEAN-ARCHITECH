@@ -54,7 +54,7 @@ spec:
                   name: fein-kafka-config
                   key: ZIPKIN_URI
             - name: KAFKA_BOOTSTRAP_SERVERS
-              value: "kafka.fein-kafka.svc.cluster.local:9092"
+              value: "kafka:9092"
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
