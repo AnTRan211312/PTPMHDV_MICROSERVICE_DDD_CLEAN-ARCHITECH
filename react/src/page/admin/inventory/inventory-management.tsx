@@ -29,15 +29,13 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { getInventories, createInventory, updateInventory, deleteInventory, restoreStock, getInventoryStats, getQuantitiesByProductIds } from "@/services/inventoryApi";
-import { getProductById, getProducts } from "@/services/productApi";
+import { getProducts } from "@/services/productApi";
 import { DeleteConfirmDialog } from "@/components/rickTexts/DeleteConfirmDialog";
 import { getErrorMessage } from "@/features/slices/authThunk";
 import type { InventoryResponse, InventoryStatsResponse } from "@/types/inventory";
 import type { ProductResponse } from "@/types/product";
 import Pagination from "@/components/rickTexts/Pagination";
 import LoadingSpinner from "@/components/rickTexts/LoadingSpinner";
-import { EmptyState } from "@/components/rickTexts/EmptyState";
-import { formatISO } from "@/utils/convertHelper";
 import HasPermission from "@/page/commons/HasPermission";
 
 export default function InventoryManagementPage() {
@@ -61,7 +59,6 @@ export default function InventoryManagementPage() {
     const [formQuantity, setFormQuantity] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [newProductInfo, setNewProductInfo] = useState<{ id: number; name: string; } | null>(null);
-    const [isCheckingProduct, setIsCheckingProduct] = useState(false);
 
     // Restock dialog
     const [isRestockDialogOpen, setIsRestockDialogOpen] = useState(false);
@@ -183,12 +180,6 @@ export default function InventoryManagementPage() {
         }
     };
 
-    const handleOpenRestock = (inv: InventoryResponse) => {
-        setEditingInventory(inv);
-        setRestockQuantity(1);
-        setIsRestockDialogOpen(true);
-    };
-
     const handleRestock = async () => {
         if (!editingInventory) return;
         setIsSubmitting(true);
@@ -233,32 +224,6 @@ export default function InventoryManagementPage() {
         if (quantity === 0) return { text: "Hết hàng", color: "bg-red-100 text-red-800" };
         if (quantity < 10) return { text: "Sắp hết", color: "bg-yellow-100 text-yellow-800" };
         return { text: "Còn hàng", color: "bg-green-100 text-green-800" };
-    };
-
-    // Check product info when creating
-    const handleCheckProduct = async (idStr: string) => {
-        if (!idStr) {
-            setNewProductInfo(null);
-            return;
-        }
-        const id = Number(idStr);
-        if (isNaN(id)) return;
-
-        setIsCheckingProduct(true);
-        try {
-            const res = (await getProductById(id)).data.data;
-            if (res) {
-                setNewProductInfo({ id: res.id, name: res.name });
-            } else {
-                setNewProductInfo(null);
-                toast.error("Không tìm thấy sản phẩm với ID này");
-            }
-        } catch (err) {
-            setNewProductInfo(null);
-            // Không toast lỗi 404 để tránh spam nếu người dùng gõ sai
-        } finally {
-            setIsCheckingProduct(false);
-        }
     };
 
     // Stats từ API (tất cả các trang)
@@ -422,7 +387,7 @@ export default function InventoryManagementPage() {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-center text-sm text-gray-600">
-                                            {formatISO(inv.updatedAt)}
+                                            {inv.updatedAt ? new Date(inv.updatedAt).toLocaleDateString('vi-VN') : '—'}
                                         </TableCell>
                                         <TableCell className="text-center">
                                             <HasPermission perm="PUT /api/inventory/{productId}">

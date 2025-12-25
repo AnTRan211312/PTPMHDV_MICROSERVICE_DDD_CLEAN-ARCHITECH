@@ -64,9 +64,6 @@ const UserSidebar = () => {
                 {sidebarItems.map((item, idx) => {
                     const active = isActive(item.href);
 
-                    // Special case for parent items with children: Check if any child is active
-                    const isParentActive = item.children?.some(child => isActive(child.href));
-
                     return (
                         <div key={idx}>
                             {item.children ? (

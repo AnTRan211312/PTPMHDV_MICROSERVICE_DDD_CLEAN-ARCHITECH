@@ -10,7 +10,6 @@ import { formatPrice } from "@/utils/convertHelper";
 import { formatISO } from "@/utils/convertHelper";
 import type { OrderResponse } from "@/types/order";
 import Pagination from "@/components/rickTexts/Pagination";
-import { Badge } from "@/components/ui/badge";
 import UserSidebar from "@/components/user/UserSidebar";
 
 const statusLabels: Record<string, string> = {
@@ -20,15 +19,6 @@ const statusLabels: Record<string, string> = {
     COMPLETED: "Hoàn thành",
     SHIPPING: "Đang giao",
     DELIVERED: "Đã giao",
-};
-
-const statusColors: Record<string, string> = {
-    PENDING_PAYMENT: "bg-orange-100 text-orange-700 border-orange-200",
-    PAID: "bg-blue-100 text-blue-700 border-blue-200",
-    CANCELLED: "bg-red-100 text-red-700 border-red-200",
-    COMPLETED: "bg-green-100 text-green-700 border-green-200",
-    SHIPPING: "bg-yellow-100 text-yellow-700 border-yellow-200",
-    DELIVERED: "bg-teal-100 text-teal-700 border-teal-200",
 };
 
 const OrderHistoryPage = () => {

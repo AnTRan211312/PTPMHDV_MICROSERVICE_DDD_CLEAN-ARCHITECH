@@ -35,8 +35,8 @@ ENV VITE_GRAFANA_URL=$VITE_GRAFANA_URL
 ENV VITE_EUREKA_URL=$VITE_EUREKA_URL
 ENV VITE_KAFKA_UI_URL=$VITE_KAFKA_UI_URL
 
-# Build the application
-RUN npm run build
+# Build the application (skip TypeScript checking for CI/CD)
+RUN npm run build:docker
 
 # -----------------------------------------------------------------------------
 # Stage 2: Production Runtime

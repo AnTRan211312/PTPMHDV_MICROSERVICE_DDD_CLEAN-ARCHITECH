@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Package, Clock, CheckCircle, XCircle, Truck, Filter, User as UserIcon, Search, Download, Printer } from "lucide-react";
+import { Package, CheckCircle, Truck, Filter, User as UserIcon, Search, Download, Printer } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -13,18 +13,9 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import {
     getAllOrders,
-    getAdminOrdersByStatus,
-    getOrder,
     updateOrderStatus,
     getOrderStats
 } from "@/services/orderApi";
@@ -63,15 +54,6 @@ const statusLabels: Record<string, string> = {
     SHIPPING: "Đang giao",
     DELIVERED: "Đã giao",
     ALL: "Tất cả trạng thái"
-};
-
-const statusIcons: Record<string, React.ReactNode> = {
-    PENDING_PAYMENT: <Clock className="h-3.5 w-3.5" />,
-    PAID: <CheckCircle className="h-3.5 w-3.5" />,
-    CANCELLED: <XCircle className="h-3.5 w-3.5" />,
-    SHIPPING: <Truck className="h-3.5 w-3.5" />,
-    DELIVERED: <Package className="h-3.5 w-3.5" />,
-    COMPLETED: <CheckCircle className="h-3.5 w-3.5" />,
 };
 
 export default function OrderManagementPage() {

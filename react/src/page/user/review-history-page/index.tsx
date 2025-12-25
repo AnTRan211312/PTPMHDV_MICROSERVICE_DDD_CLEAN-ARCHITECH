@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Pagination from "@/components/rickTexts/Pagination";
-import { Star, MessageSquare, Package, ChevronLeft, ChevronRight } from "lucide-react";
+import { Star, MessageSquare, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getMyReviews, type MyReviewResponse } from "@/services/reviewApi";

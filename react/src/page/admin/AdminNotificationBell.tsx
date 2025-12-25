@@ -141,7 +141,7 @@ export function AdminNotificationBell() {
 
     const handleMarkAsRead = async (
         id: number,
-        referenceId: string,
+        _referenceId: string,
         type: string
     ) => {
         try {

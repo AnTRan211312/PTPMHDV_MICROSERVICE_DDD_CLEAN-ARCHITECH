@@ -1,12 +1,11 @@
 import { useEffect, useState, useMemo } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import {
     Minus, Plus, Star, ChevronRight,
     AlertTriangle, Heart, Share2,
-    Truck, CheckCircle2, Zap, Edit, Trash2, ShieldCheck, RotateCcw, MoreVertical, Send
+    Truck, CheckCircle2, Zap, Edit, Trash2, MoreVertical
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,9 +42,8 @@ export default function ProductDetailPage() {
     const [reviewStats, setReviewStats] = useState<ReviewStatistics | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [quantity, setQuantity] = useState(1);
-    const [isAddingToCart, setIsAddingToCart] = useState(false);
+    const [_isAddingToCart, setIsAddingToCart] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string>("");
-    const navigate = useNavigate();
 
     // Review form
     const [newRating, setNewRating] = useState(5);
@@ -246,20 +244,6 @@ export default function ProductDetailPage() {
 
     const isOwnReview = (review: ReviewResponse) => {
         return user?.email === review.userEmail;
-    };
-
-    const renderStars = (rating: number, interactive = false, onRate?: (r: number) => void) => {
-        return (
-            <div className="flex items-center gap-0.5">
-                {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                        key={i}
-                        className={`h-5 w-5 ${i < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"} ${interactive ? "cursor-pointer hover:scale-110 transition" : ""}`}
-                        onClick={() => interactive && onRate && onRate(i + 1)}
-                    />
-                ))}
-            </div>
-        );
     };
 
     if (isLoading) {
