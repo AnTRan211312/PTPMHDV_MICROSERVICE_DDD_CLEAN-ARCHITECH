@@ -93,7 +93,7 @@ spec:
       targetPort: 2181
 
 ---
-# Kafka
+# Kafka Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -111,45 +111,150 @@ spec:
     spec:
       containers:
         - name: kafka
-          image: bitnami/kafka:3.6.0
+          image: confluentinc/cp-kafka:7.6.0
           ports:
             - containerPort: 9092
+              name: internal
+            - containerPort: 29092
+              name: external
           env:
-            - name: KAFKA_CFG_ZOOKEEPER_CONNECT
-              value: "zookeeper.fein-kafka.svc.cluster.local:2181"
-            - name: KAFKA_CFG_LISTENERS
-              value: "PLAINTEXT://:9092"
-            - name: KAFKA_CFG_ADVERTISED_LISTENERS
-              value: "PLAINTEXT://kafka.fein-kafka.svc.cluster.local:9092"
-            - name: KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE
+            # Tránh xung đột với biến KAFKA_PORT tự động của Kubernetes
+            - name: KAFKA_PORT
+              value: ""
+
+            - name: KAFKA_BROKER_ID
+              value: "1"
+            - name: KAFKA_ZOOKEEPER_CONNECT
+              value: "zookeeper:2181"
+
+            # ✅ CẤU HÌNH ĐÚNG CHO KUBERNETES
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT"
+
+            # Internal (trong cluster) + External (từ bên ngoài qua NodePort)
+            - name: KAFKA_LISTENERS
+              value: "INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092"
+
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: "INTERNAL://kafka-service:29092,EXTERNAL://localhost:9092"
+
+            - name: KAFKA_INTER_BROKER_LISTENER_NAME
+              value: "INTERNAL"
+
+            - name: KAFKA_CONFLUENT_SUPPORT_METRICS_ENABLE
+              value: "false"
+            # ---------------------------------------------
+
+            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+              value: "1"
+            - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+              value: "1"
+            - name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
+              value: "1"
+            - name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS
+              value: "0"
+            - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
               value: "true"
-            - name: KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR
-              value: "1"
-            - name: KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
-              value: "1"
-            - name: KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR
-              value: "1"
-            - name: ALLOW_PLAINTEXT_LISTENER
-              value: "yes"
+            - name: KAFKA_HEAP_OPTS
+              value: "-Xmx512M -Xms512M"
+            - name: KAFKA_LOG4J_ROOT_LOGLEVEL
+              value: "WARN"
+
+          readinessProbe:
+            tcpSocket:
+              port: 29092
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          livenessProbe:
+            tcpSocket:
+              port: 29092
+            initialDelaySeconds: 120
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+
           resources:
             requests:
               memory: "512Mi"
               cpu: "250m"
             limits:
-              memory: "1536Mi"
+              memory: "1Gi"
               cpu: "1000m"
+
 ---
+# Kafka Service
 apiVersion: v1
 kind: Service
 metadata:
-  name: kafka
+  name: kafka-service
   namespace: fein-kafka
 spec:
   selector:
     app: kafka
   ports:
-    - port: 9092
+    - name: internal
+      port: 29092
+      targetPort: 29092
+    - name: external
+      port: 9092
       targetPort: 9092
+      nodePort: 30092
+  type: NodePort
+
+---
+# Kafka Init Job - Tạo topics tự động
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kafka-init
+  namespace: fein-kafka
+spec:
+  ttlSecondsAfterFinished: 100
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: kafka-init
+          image: confluentinc/cp-kafka:7.6.0
+          command:
+            - /bin/bash
+            - -c
+            - |
+              echo "Waiting for Kafka to be ready..."
+              sleep 60
+              
+              echo "Creating topics..."
+              kafka-topics --create --if-not-exists \
+                --topic cart-analytics-events \
+                --bootstrap-server kafka-service.fein-kafka.svc.cluster.local:29092 \
+                --partitions 3 --replication-factor 1
+              
+              kafka-topics --create --if-not-exists \
+                --topic order-events \
+                --bootstrap-server kafka-service.fein-kafka.svc.cluster.local:29092 \
+                --partitions 3 --replication-factor 1
+              
+              kafka-topics --create --if-not-exists \
+                --topic payment-events \
+                --bootstrap-server kafka-service.fein-kafka.svc.cluster.local:29092 \
+                --partitions 3 --replication-factor 1
+              
+              kafka-topics --create --if-not-exists \
+                --topic order-created \
+                --bootstrap-server kafka-service.fein-kafka.svc.cluster.local:29092 \
+                --partitions 3 --replication-factor 1
+              
+              kafka-topics --create --if-not-exists \
+                --topic payment-completed \
+                --bootstrap-server kafka-service.fein-kafka.svc.cluster.local:29092 \
+                --partitions 3 --replication-factor 1
+              
+              echo "✅ All topics created successfully!"
+              
+              kafka-topics --list --bootstrap-server kafka-service.fein-kafka.svc.cluster.local:29092
 
 ---
 # Zipkin

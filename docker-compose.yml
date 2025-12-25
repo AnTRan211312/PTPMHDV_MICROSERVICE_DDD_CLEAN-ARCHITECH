@@ -16,7 +16,7 @@ services:
 
   # 2. KAFKA SERVICE
   kafka:
-    image: confluentinc/cp-kafka:7.5.0
+    image: confluentinc/cp-kafka:7.6.0
     container_name: kafka
     restart: unless-stopped
     depends_on:

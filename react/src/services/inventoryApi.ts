@@ -1,5 +1,4 @@
 import axiosClient from "@/lib/axiosClient";
-import axios from "axios";
 import type {
     ApiResponse,
     PageResponseDto,
@@ -73,9 +72,8 @@ export const deleteInventory = (productId: number) => {
 
 // PUBLIC - Không cần token
 export const getInventory = (productId: number) => {
-    return axios.get<ApiResponse<InventoryResponse>>(
-        `http://localhost:8080/api/inventory/${productId}`,
-        { withCredentials: true }
+    return axiosClient.get<ApiResponse<InventoryResponse>>(
+        `/inventory/${productId}`
     );
 };
 
@@ -84,26 +82,23 @@ export const getQuantitiesByProductIds = (productIds: number[]) => {
     const queryString = new URLSearchParams({
         productIds: productIds.join(","),
     }).toString();
-    return axios.get<ApiResponse<InventoryQuantityResponse[]>>(
-        `http://localhost:8080/api/inventory/batch?${queryString}`,
-        { withCredentials: true }
+    return axiosClient.get<ApiResponse<InventoryQuantityResponse[]>>(
+        `/inventory/batch?${queryString}`
     );
 };
 
 // PUBLIC - Không cần token (Internal API)
 export const reduceMultipleStock = (requests: ReduceStockRequest[]) => {
-    return axios.post<ApiResponse<void>>(
-        `http://localhost:8080/api/inventory/reduce-multiple`,
-        requests,
-        { withCredentials: true }
+    return axiosClient.post<ApiResponse<void>>(
+        `/inventory/reduce-multiple`,
+        requests
     );
 };
 
 // PUBLIC - Không cần token (Internal API)
 export const restoreStock = (productId: number, quantity: number) => {
-    return axios.post<ApiResponse<void>>(
-        `http://localhost:8080/api/inventory/${productId}/restore?quantity=${quantity}`,
-        {},
-        { withCredentials: true }
+    return axiosClient.post<ApiResponse<void>>(
+        `/inventory/${productId}/restore?quantity=${quantity}`,
+        {}
     );
 };

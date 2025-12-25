@@ -33,10 +33,34 @@ const DashboardPage = () => {
     }, []);
 
     const infrastructureLinks = [
-        { name: "Prometheus", port: 9090, url: "http://localhost:9090", description: "Metrics Database", color: "text-orange-600 bg-orange-100" },
-        { name: "Grafana", port: 3000, url: "http://localhost:3000", description: "Visualization Dashboard", color: "text-orange-500 bg-orange-50" },
-        { name: "Eureka", port: 8761, url: "http://localhost:8761", description: "Service Registry", color: "text-green-600 bg-green-100" },
-        { name: "Kafka UI", port: 8888, url: "http://localhost:8888", description: "Message Broker UI", color: "text-purple-600 bg-purple-100" },
+        {
+            name: "Prometheus",
+            port: 9090,
+            url: import.meta.env.VITE_PROMETHEUS_URL || "http://localhost:9090",
+            description: "Metrics Database",
+            color: "text-orange-600 bg-orange-100"
+        },
+        {
+            name: "Grafana",
+            port: 3000,
+            url: import.meta.env.VITE_GRAFANA_URL || "http://localhost:3000",
+            description: "Visualization Dashboard",
+            color: "text-orange-500 bg-orange-50"
+        },
+        {
+            name: "Eureka",
+            port: 8761,
+            url: import.meta.env.VITE_EUREKA_URL || "http://localhost:8761",
+            description: "Service Registry",
+            color: "text-green-600 bg-green-100"
+        },
+        {
+            name: "Kafka UI",
+            port: 8888,
+            url: import.meta.env.VITE_KAFKA_UI_URL || "http://localhost:8888",
+            description: "Message Broker UI",
+            color: "text-purple-600 bg-purple-100"
+        },
     ];
 
     if (loading) {

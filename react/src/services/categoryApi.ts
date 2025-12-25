@@ -1,5 +1,4 @@
 import axiosClient from "@/lib/axiosClient";
-import axios from "axios";
 import type {
     ApiResponse,
     PageResponseDto,
@@ -19,17 +18,15 @@ export const getCategories = ({ page = 0, size = 10, keyword = null }: Partial<P
     });
     if (keyword) params.append("keyword", keyword);
 
-    return axios.get<ApiResponse<PageResponseDto<CategoryResponse>>>(
-        `http://localhost:8080/api/categories?${params.toString()}`,
-        { withCredentials: true }
+    return axiosClient.get<ApiResponse<PageResponseDto<CategoryResponse>>>(
+        `/categories?${params.toString()}`
     );
 };
 
 // PUBLIC - Không cần token
 export const getCategoryById = (id: number) => {
-    return axios.get<ApiResponse<CategoryResponse>>(
-        `http://localhost:8080/api/categories/${id}`,
-        { withCredentials: true }
+    return axiosClient.get<ApiResponse<CategoryResponse>>(
+        `/categories/${id}`
     );
 };
 

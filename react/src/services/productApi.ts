@@ -1,5 +1,4 @@
 import axiosClient from "@/lib/axiosClient";
-import axios from "axios";
 import type {
     ApiResponse,
     PageResponseDto,
@@ -36,17 +35,15 @@ export const getProducts = ({
     if (minPrice && minPrice > 0) params.append("minPrice", minPrice.toString());
     if (maxPrice && maxPrice > 0) params.append("maxPrice", maxPrice.toString());
 
-    return axios.get<ApiResponse<PageResponseDto<ProductResponse>>>(
-        `http://localhost:8080/api/products?${params.toString()}`,
-        { withCredentials: true }
+    return axiosClient.get<ApiResponse<PageResponseDto<ProductResponse>>>(
+        `/products?${params.toString()}`
     );
 };
 
 // PUBLIC - Không cần token
 export const getProductById = (id: number) => {
-    return axios.get<ApiResponse<ProductResponse>>(
-        `http://localhost:8080/api/products/${id}`,
-        { withCredentials: true }
+    return axiosClient.get<ApiResponse<ProductResponse>>(
+        `/products/${id}`
     );
 };
 

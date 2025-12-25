@@ -1,5 +1,4 @@
 import axiosClient from "@/lib/axiosClient";
-import axios from "axios";
 import type {
     ApiResponse,
 } from "@/types/apiResponse.d.ts";
@@ -21,9 +20,8 @@ export const createPayment = (
 
 export const handlePaymentCallback = (params: Record<string, string>) => {
     const queryString = new URLSearchParams(params).toString();
-    return axios.get<ApiResponse<PaymentCallbackResponse>>(
-        `http://localhost:8080/api/payments/callback?${queryString}`,
-        { withCredentials: true }
+    return axiosClient.get<ApiResponse<PaymentCallbackResponse>>(
+        `/payments/callback?${queryString}`
     );
 };
 

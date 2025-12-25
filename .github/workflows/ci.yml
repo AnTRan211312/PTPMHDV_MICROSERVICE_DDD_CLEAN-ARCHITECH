@@ -9,8 +9,21 @@ on:
   pull_request:
     branches: [main]
 
+# =============================================================================
+# Environment variables for frontend build
+# =============================================================================
+env:
+  # Production API URL - Update this to match your K8s cluster
+  VITE_API_BASE_URL: http://localhost:30080/api
+  VITE_PROMETHEUS_URL: http://localhost:30090
+  VITE_GRAFANA_URL: http://localhost:30300
+  VITE_EUREKA_URL: http://localhost:30761
+  VITE_KAFKA_UI_URL: http://localhost:30888
+
 jobs:
-  # Build và Push Docker images cho tất cả services
+  # ===========================================================================
+  # Build và Push Docker images cho tất cả backend services
+  # ===========================================================================
   build-and-push:
     runs-on: ubuntu-latest
     
@@ -57,7 +70,48 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
 
+  # ===========================================================================
+  # Build và Push Frontend Docker image
+  # ===========================================================================
+  build-and-push-frontend:
+    runs-on: ubuntu-latest
+    
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./react
+          file: ./react/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/frontend:${{ github.sha }}
+          build-args: |
+            VITE_API_BASE_URL=${{ env.VITE_API_BASE_URL }}
+            VITE_PROMETHEUS_URL=${{ env.VITE_PROMETHEUS_URL }}
+            VITE_GRAFANA_URL=${{ env.VITE_GRAFANA_URL }}
+            VITE_EUREKA_URL=${{ env.VITE_EUREKA_URL }}
+            VITE_KAFKA_UI_URL=${{ env.VITE_KAFKA_UI_URL }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+
+  # ===========================================================================
   # Job kiểm tra build cho Pull Requests (không push)
+  # ===========================================================================
   build-check:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
@@ -92,3 +146,32 @@ jobs:
           push: false
           cache-from: type=gha,scope=${{ matrix.service }}
           cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
+  # ===========================================================================
+  # Job kiểm tra build Frontend cho Pull Requests (không push)
+  # ===========================================================================
+  build-check-frontend:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Frontend (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./react
+          file: ./react/Dockerfile
+          push: false
+          build-args: |
+            VITE_API_BASE_URL=${{ env.VITE_API_BASE_URL }}
+            VITE_PROMETHEUS_URL=${{ env.VITE_PROMETHEUS_URL }}
+            VITE_GRAFANA_URL=${{ env.VITE_GRAFANA_URL }}
+            VITE_EUREKA_URL=${{ env.VITE_EUREKA_URL }}
+            VITE_KAFKA_UI_URL=${{ env.VITE_KAFKA_UI_URL }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
